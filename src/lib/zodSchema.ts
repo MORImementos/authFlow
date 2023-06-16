@@ -38,4 +38,21 @@ export const Community = z.object({
         .trim(),
     type: z
         .enum(["Official", "Unofficial"], { required_error: 'Enter a valid type' }),
+    private: z
+        .union([
+            z.literal('on').transform(() => true),
+            z.literal('undefined').transform(() => false),
+        ])
+        .default(false),
+    global_link: z
+        .union([
+            z.literal('on').transform(() => true),
+            z.literal('undefined').transform(() => false),
+        ])
+        .default(false),
+    desc: z
+        .string({ required_error: 'Enter a valid description' })
+        .max(1000, { message: 'Community description is too long' })
+        .min(1, { message: 'Community description is too short'})
+        .trim(),
 })

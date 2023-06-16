@@ -1,49 +1,55 @@
 import { z } from 'zod'
 import { superValidate } from 'sveltekit-superforms/server'
-import { User } from '../../lib/zodSchema'
+import { Community } from '../../../lib/zodSchema'
 import { fail, redirect } from '@sveltejs/kit';
-import { BACKEND, USER_ENDPOINTS, POST } from '../../lib/constants';
+import { BACKEND, COMMUNITY_ENDPOINTS, POST } from '../../../lib/constants';
 import type { Actions } from './$types'
 
 // assign schema for form
-const userLogin = User.pick({
-    Email: true,
-    Password: true
+const communityCreate = Community.pick({
+    community_name: true,
+    type: true,
+    private: true,
+    global_link: true,
+    desc: true
 })
 
 // infer type of schema
-type userLogin = z.infer<typeof userLogin>
+type communityCreate = z.infer<typeof communityCreate>
 
 // on page load, check for jwt and redirect if jwt present
-export const load = async (event) => {
-	const jwt = event.cookies.get('jwt')
-	if (jwt) throw redirect(302, '/');
-	
-    const form = await superValidate(event, userLogin);
-	return {
-		form
-	};
-  };
+export const load = async ({ fetch, cookies }) => {
+    const jwt = cookies.get('jwt')
+    if (!jwt) throw redirect(302, '/login');
 
-// on submit if form is valid, login. if not, throw error
+    const form = await superValidate(event, communityCreate);
+    return {
+        form
+    };
+};
+
+// on submit if form is valid, create community. if not, throw error
 export const actions = {
     default: async ({ cookies, request, fetch }) => {
-        const form = await superValidate(request, userLogin);
-        
+        const form = await superValidate(request, communityCreate);
+
         // Convenient validation check:
         if (!form.valid) {
             // Again, always return { form } and things will just work. (superforms comment)
             return fail(400, { form });
         }
-
-        // fetch request 
-        const response = await fetch(BACKEND + USER_ENDPOINTS.LOGIN, {
-            headers: {'Content-Type': 'application/json'},
+        
+        console.log(form.data)
+        // fetch request
+        console.log(BACKEND + COMMUNITY_ENDPOINTS.COMMUNITY_CREATE)
+        const response = await fetch(BACKEND + COMMUNITY_ENDPOINTS.COMMUNITY_CREATE, {
+            headers: { 'Content-Type': 'application/json' },
             method: "POST",
             body: JSON.stringify(form.data),
         })
-
-        // if login unsuccessful
+        
+        console.log(response.status)
+        // if community creation unsuccessful
         if (response.status !== 200) {
             {
                 // this is all just a way to parse the html error received. I'm still not certain if I intend to do anything with it or not yet, since a generic error might be all that's needed.
@@ -62,23 +68,15 @@ export const actions = {
         }
         const res = await response.json();
 
-        // if login successful
+        // if community creation successful
         if (response.status === 200) {
-            // if login includes jwt
-            if (res.access_token) {
-                const jwt = res.access_token
-
-                // add jwt to cookies
-                cookies.set('jwt', jwt, {
-                    path: '/',
-                    httpOnly: false,
-                    maxAge: 60 * 60 * 24 * 7
-                })
-            }
+            // Handle the response as needed
+            console.log(res)
         }
+
         /* Yep, return { form } here too (apparently superforms really wants you to return forms)
-        return username and form/msg
-        TODO: if we want to be able to access the name of the user, might need to store the username somewhere. Possible locations are events.locals, a store, maybe even just a sqlite database? */ 
+        return form and any other relevant data
+        TODO: Add any additional data you want to return */
         return {
             form: form,
             msg: res.msg,

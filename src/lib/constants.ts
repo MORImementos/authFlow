@@ -30,7 +30,7 @@ export enum USER_ENDPOINTS {
 }
 
 export enum COMMUNITY_ENDPOINTS {
-    COMMUNITY_CREATE = '/community/create/',
+    COMMUNITY_CREATE = '/community/create',
     COMMUNITY_JOIN = '/community/join/',
     COMMUNITY_INVITE = '/community/invite/',
     COMMUNITY_MEMBERS = '/community/members/',
@@ -72,3 +72,4 @@ export const EMAIL_CHARACTER_LIMIT: number = 120;
 
 // COMMUNITY
 export const COMMUNITY_CHARACTER_LIMIT: number = 100;
+export const COMMUNITY_DESCRIPTION_CHARACTER_LIMIT: number = 1000;
